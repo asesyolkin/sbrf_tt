@@ -1,0 +1,68 @@
+html {
+	min-height: 100%;
+  background:linear-gradient(to right top, rgb(171, 73, 222), rgb(51, 105, 231));
+}
+#layout {
+  width: 400px;
+  margin: 200px auto;
+}
+#layout input {
+  padding-left: 3px;
+}
+
+ /* GET-USERS */
+
+#wrapper-get-users {
+  margin: 0 auto 30px;
+}
+.get-users > button {
+  margin-bottom: 14px;
+}
+.get-users button, input {
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+.get-users button:focus, input:focus {
+  outline: none;
+}
+.get-users button:active {
+  box-shadow: inset 2px 2px 1px rgba(0, 0, 0, .3)
+}
+
+ /* TABLE-WITH-USERS */
+
+.table-with-users {
+  color: #e0ece8;
+  border-collapse: collapse;
+  width: 370px;
+}
+.table-with-users td, th {
+  border: 1px solid black;
+  padding: 3px 5px;
+}
+.table-with-users .th-name, .th-age {
+  width: 150px;
+}
+
+ /* ADD-CHANGE-DELETE-USERS */
+
+#wrapper-change-users {
+  margin-top: 20px;
+}
+#wrapper-change-users button {
+  margin-bottom: 15px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+#wrapper-change-users button:active {
+  box-shadow: inset 2px 2px 1px rgba(0, 0, 0, .3)
+}
+#wrapper-change-users button:focus {
+  outline: none;
+}
+.add-user-button, .change-users-button {
+  margin-right: 10px;
+}
+.new-data {
+  width: 135px;
+}
