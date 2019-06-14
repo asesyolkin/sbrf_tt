@@ -25,8 +25,8 @@ const Users = {
   changeUsers(modifiedUsers) {
     for (let i = z = 0; z < modifiedUsers.length && i < users.length; i++) {
       if (users[i].id === modifiedUsers[z].id) {
-        users[i].name = modifiedUsers[z].currentName;
-        users[i].age = modifiedUsers[z].currentAge;
+        users[i].name = modifiedUsers[z].currentName || '';
+        users[i].age = modifiedUsers[z].currentAge || null;
         z++;
       };
     };

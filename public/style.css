@@ -60,7 +60,7 @@ html {
 #wrapper-change-users button:focus {
   outline: none;
 }
-.add-user-button, .change-users-button {
+.button-add-user, .button-change-users {
   margin-right: 10px;
 }
 .new-data {

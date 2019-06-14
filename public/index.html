@@ -4,19 +4,65 @@
     <title>SBRF</title>
     <meta charset="utf-8" />
     <link href="style.css" rel="stylesheet" type="text/css">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <script src="https://unpkg.com/vue"></script>
+    <script>Vue.config.productionTip = false;</script>
 </head>
 <body>
   <div id="layout">
     <div id="wrapper-get-users">
       <form name="get-users" class="get-users">
-        <button class="get-users-button">Получить всех пользователей</button>
+        <button class="get-users-button" @click.prevent="getUsers">
+          Получить всех пользователей
+        </button>
         <br>
-        <input type="number" name="user-id">
-        <button class="get-user-by-id-button">Получить пользователя по ID</button>
+        <input type="number" name="user-id" ref="inputUserId">
+        <button class="get-user-by-id-button" @click.prevent="getUserById">
+          Получить пользователя по ID
+        </button>
       </form>
     </div>
-    <div id="wrapper-table-with-users"></div>
-    <div id="wrapper-change-users"></div>
+    <div id="wrapper-table-with-users">
+      <table class="table-with-users" v-if="users.length" ref="tableWithUsers">
+        <tr>
+          <th class="th-check-box">
+            <input type="checkbox" class="change-all-users" v-model="checkAllCheckBox">
+          </th>
+          <th class="th-id">ID</th>
+          <th class="th-name">Имя</th>
+          <th class="th-age">Возраст</th>
+        </tr>
+        <template v-for="user in users">
+          <tr :key="user.id">
+            <td><input type="checkbox" :checked="checkAllCheckBox"></td>
+            <td>{{user.id}}</td>
+            <td>{{user.name}}</td>
+            <td>{{user.age}}</td>
+          </tr>
+        </template>
+        <tr v-if="stateAddNewUser">
+          <td><input type="checkbox"></td>
+          <td></td>
+          <td><input type="text" class="new-data"></td>
+          <td><input type="number" class="new-data"></td>
+        </tr>
+      </table>
+    </div>
+    <div id="wrapper-change-users">
+      <template v-if="users.length">
+        <button class="button-add-user" @click="addUser">
+          {{ stateAddNewUser ? 'Отменить добавление' : 'Добавить пользователя' }}
+        </button>
+        <button v-if="stateAddNewUser" @click="saveUser">Сохранить</button>
+        <br>
+        <button class="button-change-users" @click="changeUsers">
+          {{stateChangeUsers ? 'Отменить изменение' : 'Изменить данные пользователей'}}
+        </button>
+        <button v-if="stateChangeUsers" @click="saveModifiedUsers">Сохранить</button>
+        <br>
+        <button class="delete-users-button" @click="removeUsers">Удалить пользователей</button>
+      </template>
+    </div>
   </div>
   <script src="script.js" defer type="module"></script>
 </body>
