@@ -9,6 +9,9 @@ html {
 #layout input {
   padding-left: 3px;
 }
+[v-cloak] {
+  display: none;
+}
 
  /* GET-USERS */
 
