@@ -10,13 +10,17 @@
     <script>Vue.config.productionTip = false;</script>
 </head>
 <body>
-  <div id="layout" :style="styleObject" v-cloak>
+  <div 
+    id="layout" 
+    :style="styleObject" 
+    v-cloak
+  >
     <get-users 
       :state-add-new-user="stateAddNewUser"
       :state-change-users="stateChangeUsers"
       :send-request="sendRequest"
-      ></get-users>
-      <table-with-users
+    ></get-users>
+    <table-with-users
       :state-add-new-user="stateAddNewUser"
       :state-change-users="stateChangeUsers"
       :send-request="sendRequest"
