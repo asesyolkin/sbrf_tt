@@ -30,6 +30,8 @@ const Users = {
         z++;
       };
     };
+
+    return users;
   },
   removeUsers(deletedUsers) {
     for (let i = 0, z = 0; z < deletedUsers.length && i < users.length;) {
@@ -40,6 +42,8 @@ const Users = {
       };
        i++
     };
+
+    return users;
   }
 };
 

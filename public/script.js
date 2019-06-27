@@ -11,8 +11,7 @@ Vue.component('get-users', {
   props: {
     stateAddNewUser: Boolean,
     stateChangeUsers: Boolean,
-    sendRequest: Function,
-    refAsdf: Object
+    sendRequest: Function
   },
   template: `
   <div id="wrapper-get-users">
@@ -52,8 +51,7 @@ Vue.component('button-get-users', {
       
       let callback = (e) => {
         let receivedUsers = JSON.parse(e.target.response);
-        eventBus.$emit('get-users', receivedUsers);
-        // this.users = receivedUsers;
+        eventBus.$emit('set-users', receivedUsers);
       };
     
       this.sendRequest({
@@ -91,7 +89,7 @@ Vue.component('button-get-user', {
           alert(e.target.response);
         } else {
           let receivedUser = JSON.parse(e.target.response);
-          eventBus.$emit('get-users', [receivedUser]);
+          eventBus.$emit('set-users', [receivedUser]);
         }
       };
       
@@ -108,20 +106,18 @@ Vue.component('table-with-users', {
   props: {
     users: Array,
     stateAddNewUser: Boolean,
-    sendRequest: Function,
-    checkAllCheckbox: Boolean
+    stateChangeUsers: Boolean,
+    sendRequest: Function
   },
   template: `
     <div id="wrapper-table-with-users">
       <table class="table-with-users" v-if="users.length">
-        <tr-headers
-          :checkAllCheckbox="checkAllCheckbox"
-        ></tr-headers>
+        <tr-headers></tr-headers>
         <tr-users 
           v-for="user in users" 
           :key="user.id"
           :user="user" 
-          :checkAllCheckbox="checkAllCheckbox" 
+          :stateChangeUsers="stateChangeUsers" 
         ></tr-users>
         <tr-new-user 
           v-if="stateAddNewUser"
@@ -132,15 +128,10 @@ Vue.component('table-with-users', {
 })
 
 Vue.component('tr-headers', {
-  props: {
-    checkAllCheckbox: Boolean
-  },
   template: `
   <tr>
     <th class="th-check-box">
-      <input-checkbox-all-users
-        :checkAllCheckbox="checkAllCheckbox"
-      ></input-checkbox-all-users>
+      <input-checkbox-all-users></input-checkbox-all-users>
     </th>
     <th class="th-id">ID</th>
     <th class="th-name">Имя</th>
@@ -150,75 +141,156 @@ Vue.component('tr-headers', {
 })
 
 Vue.component('input-checkbox-all-users', {
-  props: {
-    checkAllCheckbox: Boolean
+  data() {
+    return {
+      stateCheckboxAllUsers: false
+    };
+  },
+  created() {
+    eventBus.$on('check-checkbox-all-users', (value) => {
+      this.stateCheckboxAllUsers = value;
+      eventBus.$emit('check-local-checkbox', value);
+    });
   },
   template: `
     <input 
       type="checkbox" 
       class="change-all-users" 
-      :checked="checkAllCheckbox"
+      v-model="stateCheckboxAllUsers"
       @change="checkboxHandler"
     >
   `,
   methods: {
     checkboxHandler(e) {
-      eventBus.$emit('checkAllCheckbox', e.target.checked)
+      eventBus.$emit('check-local-checkbox', e.target.checked)
     }
   }
 })
 
 Vue.component('tr-users', {
-  functional: true,
   props: {
-    checkAllCheckbox: Boolean,
+    stateChangeUsers: Boolean,
     user: Object
   },
-  render: function(createElement, context) {
-    return createElement(
-      'tr',
-      [
-        createElement('td',
-          [
-            createElement('input-checkbox-user', {
-              props: {
-                checkAllCheckbox: context.props.checkAllCheckbox,
-              }
-            })
-          ]
-        ),
-        createElement('td', context.props.user.id),
-        createElement('td', context.props.user.name),
-        createElement('td', context.props.user.age)
-      ]
-    )
+  computed: {
+    stateChangingUserData() {
+      if (this.stateChangeUsers && this.stateLocalCheckbox) return true;
+      else if (this.stateChangeUsers && this._computedWatchers.stateChangingUserData.value) return true;
+      else return false;
+    }
   },
-  // template: `
-  //   <tr>
-  //     <td><input type="checkbox" :checked="checkAllCheckbox"></td>
-  //     <td>{{user.id}}</td>
-  //     <td>{{user.name}}</td>
-  //     <td>{{user.age}}</td>
-  //   </tr>
-  // `
-})
+  data() {
+    return {
+      stateLocalCheckbox: this.checkAllCheckbox,
+      changedTheUser: {
+        name: this.user.name,
+        age: this.user.age
+      }
+    }
+  },
+  created() {
+    eventBus.$on('get-number-of-selected-users', () => {
+      if (this.stateLocalCheckbox) {
+        eventBus.$emit('set-number-of-selected-users', 1);
+      }
+      else {
+        eventBus.$emit('set-number-of-selected-users', 0);
+      }
+    });
+    eventBus.$on('get-changed-users', () => {
+      if (this.stateChangingUserData) {
+        let user = {
+          currentName: this.changedTheUser.name,
+          currentAge: +this.changedTheUser.age,
+          id: this.user.id
+        };
 
-Vue.component('input-checkbox-user', {
-  props: {
-    checkAllCheckbox: Boolean
+        eventBus.$emit('set-changed-users', user);
+      }
+    });
+    eventBus.$on('get-users-to-delete', () => {
+      if (this.stateLocalCheckbox) {
+        eventBus.$emit('set-users-to-delete', {id: this.user.id});
+      }
+    });
+    eventBus.$on('check-local-checkbox', (value) => {
+      this.stateLocalCheckbox = value;
+    });
   },
   template: `
-    <input type="checkbox" :checked="checkAllCheckbox"></input>
-  `
+    <tr>
+      <td><input type="checkbox" v-model="stateLocalCheckbox"></td>
+      <td>{{user.id}}</td>
+      <td>
+        <template v-if="!stateChangingUserData">
+          {{ user.name }}
+        </template>
+        <template v-else>
+          <input 
+            type="text" 
+            class="new-data" 
+            :value="user.name" 
+            @change="saveModifiedUserData('name')"
+          >
+        </template>  
+      </td>   
+      <td>
+        <template v-if="!stateChangingUserData">
+          {{ user.age }}
+        </template>
+        <template v-else>
+          <input 
+            type="number" 
+            class="new-data" 
+            :value="user.age" 
+            @change="saveModifiedUserData('age')"
+          >
+        </template>  
+      </td>
+    </tr>
+  `,
+  methods: {
+    saveModifiedUserData(dataType) {
+      if (dataType === 'name') this.changedTheUser.name = event.target.value;
+      else this.changedTheUser.age = +event.target.value;
+    }
+  }
 })
 
 Vue.component('tr-new-user', {
+  data() {
+    return {
+      newUser: {
+        name: '',
+        age: null
+      }
+    }
+  },
+  created() {
+    eventBus.$on('get-data-new-user', () => {
+      eventBus.$emit('set-data-new-user', this.newUser);
+    });
+  },
   template: `
     <tr>
-      <td><input type="checkbox"></td>
+      <td>
+        <input type="checkbox">
+      </td>
       <td></td>
-      <td><input type="text" class="new-data"></td>
-      <td><input type="number" class="new-data"></td>
+      <td>
+        <input 
+          type="text" 
+          class="new-data"
+          v-model="newUser.name"
+        >
+      </td>
+      <td>
+        <input 
+          type="number" 
+          class="new-data"
+          v-model="newUser.age"
+        >
+      </td>
     </tr>
   `
 })
@@ -228,8 +300,7 @@ Vue.component('change-users', {
     stateAddNewUser: Boolean,
     stateChangeUsers: Boolean,
     sendRequest: Function,
-    usersLength: Number,
-    checkedUsers: Array
+    usersLength: Number
   },
   template: `
     <div id="wrapper-change-users">
@@ -247,18 +318,15 @@ Vue.component('change-users', {
         <button-change-users
           :stateAddNewUser="stateAddNewUser"
           :stateChangeUsers="stateChangeUsers"
-          :parentCheckedUsers="checkedUsers"
         ></button-change-users>
         <button-save-modified-users 
           v-if="stateChangeUsers"
-          :parentCheckedUsers="checkedUsers"
           :sendRequest="sendRequest"
         ></button-save-modified-users>
         <br>
         <button-delete-users
           :stateAddNewUser="stateAddNewUser"
           :stateChangeUsers="stateChangeUsers"
-          :parentCheckedUsers="checkedUsers"
           :sendRequest="sendRequest"
         ></button-delete-users>
       </template>
@@ -290,10 +358,15 @@ Vue.component('button-save-user', {
     stateChangeUsers: Boolean,
     sendRequest: Function
   },
-  computed: {
-    tableWithUsers: function() {
-      return vm.$refs.componentTableWithUsers.$el.children[0];
+  data() {
+    return {
+      newUser: {}
     }
+  },
+  created() {
+    eventBus.$on('set-data-new-user', (newUser) => {
+      this.newUser = newUser;
+    })
   },
   template: `
     <button @click="saveUser">Сохранить</button>
@@ -302,17 +375,16 @@ Vue.component('button-save-user', {
     saveUser: function() {
       if (this.stateChangeUsers) return alert('Сначала завершите или отмените операцию по изменению пользователей');
       
-      let name = this.tableWithUsers.rows[this.tableWithUsers.rows.length-1].cells[2].children[0].value;
-      let age = this.tableWithUsers.rows[this.tableWithUsers.rows.length-1].cells[3].children[0].value;
+      eventBus.$emit('get-data-new-user');
 
-      if (!name || !age) {
+      if (!this.newUser.name || !this.newUser.age) {
         return alert('Перед добавлением нового пользователя необходимо заполнить все поля ячеек таблицы');
       };
       
-      let newUser = JSON.stringify({name, age});
+      let newUser = JSON.stringify(this.newUser);
       
       let callback = (event) => {
-        let newUser = JSON.parse(event.target.response);
+        newUser = JSON.parse(event.target.response);
         alert('Добавлен новый пользователь с ID ' + newUser.id);
         eventBus.$emit('save-user', newUser);
       };
@@ -330,15 +402,19 @@ Vue.component('button-change-users', {
   props: {
     stateAddNewUser: Boolean,
     stateChangeUsers: Boolean,
-    parentCheckedUsers: Array
   },
-  computed: {
-    tableWithUsers: function() {
-      return vm.$refs.componentTableWithUsers.$el.children[0];
-    },
-    checkedUsers: function() {
-      return this.parentCheckedUsers
+  data: function() {
+    return {
+      numberCheckedUsers: 0
     }
+  },
+  created() {
+    eventBus.$on('set-number-of-selected-users', (number) => {
+      this.numberCheckedUsers += number;
+    });
+    eventBus.$on('reset-number-of-selected-users', () => {
+      this.numberCheckedUsers = 0;
+    });
   },
   template: `
     <button class="button-change-users" @click="changeUsers">
@@ -349,26 +425,15 @@ Vue.component('button-change-users', {
     changeUsers: function() {
       if (this.stateAddNewUser) return alert('Сначала завершите или отмените операцию по добавлению нового пользователя');
       
-      if (!this.checkedUsers.length) {
-        for (let i = 1; i < this.tableWithUsers.rows.length; ++i) {
-          let currentUser = this.tableWithUsers.rows[i];
-          if (currentUser.cells[0].children[0].checked) {
-            let currentName = currentUser.cells[2].textContent;
-            let currentAge = currentUser.cells[3].textContent;
-            this.checkedUsers.push({
-              linkToElem: currentUser,
-              currentName,
-              currentAge
-            });
-            currentUser.cells[2].innerHTML = `<input type="text" class="new-data" value="${currentUser.cells[2].textContent}">`;
-            currentUser.cells[3].innerHTML = `<input type="number" class="new-data" value="${currentUser.cells[3].textContent}">`;
-          };
-        };
-        
-        if (!this.checkedUsers.length) return alert('Для внесения изменений отметьте галочкой хотя бы одного пользователя');
-    
+      if (!this.numberCheckedUsers) {
+        eventBus.$emit('get-number-of-selected-users');
+
+        if (!this.numberCheckedUsers) return alert('Для внесения изменений отметьте галочкой хотя бы одного пользователя');
+
         eventBus.$emit('change-users', true);
       } else {
+        this.numberCheckedUsers = 0;
+        eventBus.$emit('check-checkbox-all-users', false);
         eventBus.$emit('change-users', false);
       }
     }
@@ -377,40 +442,35 @@ Vue.component('button-change-users', {
 
 Vue.component('button-save-modified-users', {
   props: {
-    parentCheckedUsers: Array,
     sendRequest: Function
   },
-  computed: {
-    checkedUsers: function() {
-      return this.parentCheckedUsers
+  data() {
+    return {
+      changedUsers: []
     }
+  },
+  created() {
+    eventBus.$on('set-changed-users', (user) => {
+      this.changedUsers.push(user);
+    });
   },
   template: `
     <button @click="saveModifiedUsers">Сохранить</button>
   `,
   methods: {
     saveModifiedUsers: function() {
-      for (let i = 0; i < this.checkedUsers.length; ++i) {
-        let currentUser = this.checkedUsers[i];
-        let currentID = +currentUser.linkToElem.cells[1].textContent;
-        let currentName = currentUser.linkToElem.cells[2].children[0].value;
-        let currentAge = currentUser.linkToElem.cells[3].children[0].value;
-        
-        currentUser.id = currentID;
-        currentUser.currentName = currentName;
-        currentUser.currentAge = currentAge;
-      }
+      eventBus.$emit('get-changed-users');
       
-      let checkedUsers = JSON.stringify(this.checkedUsers);
-      
+      let changedUsers = JSON.stringify(this.changedUsers);
+
       let callback = (e) => {
-        alert(e.target.response);
-        
-        eventBus.$emit('change-users', false);
+        changedUsers = JSON.parse(e.target.response);
+        eventBus.$emit('save-changed-users', changedUsers);
+        alert('Изменения в базу пользователей успешно внесены');
       };
       
       this.sendRequest({
-        data: checkedUsers,
+        data: changedUsers,
         url: "/change-users",
         callback
       });
@@ -422,16 +482,17 @@ Vue.component('button-delete-users', {
   props: {
     stateAddNewUser: Boolean,
     stateChangeUsers: Boolean,
-    parentCheckedUsers: Array,
     sendRequest: Function
   },
-  computed: {
-    checkedUsers: function() {
-      return this.parentCheckedUsers
-    },
-    tableWithUsers: function() {
-      return vm.$refs.componentTableWithUsers.$el.children[0];
+  data() {
+    return {
+      usersToDelete: []
     }
+  },
+  created() {
+    eventBus.$on('set-users-to-delete', (user) => {
+      this.usersToDelete.push(user);
+    })
   },
   template: `
     <button class="delete-users-button" @click="removeUsers">
@@ -442,32 +503,20 @@ Vue.component('button-delete-users', {
     removeUsers: function() {
       if (this.stateAddNewUser || this.stateChangeUsers) return alert('Сначала завершите или отмените операцию по добавлению / изменению пользователей');
       
-      for (let i = 1; i < this.tableWithUsers.rows.length; ++i) {
-        let currentUser = this.tableWithUsers.rows[i];
-        if (currentUser.cells[0].children[0].checked) {
-          this.checkedUsers.push({
-            linkToElem: currentUser,
-            id: +currentUser.cells[1].textContent
-          });
-        };
-      };
+      eventBus.$emit('get-users-to-delete');
       
-      if (!this.checkedUsers.length) return alert('Для удаления отметьте галочкой хотя бы одного пользователя');
+      if (!this.usersToDelete.length) return alert('Для удаления отметьте галочкой хотя бы одного пользователя');
         
-      let checkedUsers = JSON.stringify(this.checkedUsers);
+      let usersToDelete = JSON.stringify(this.usersToDelete);
       
       let callback = (e) => {
-        for (let currentUser of this.checkedUsers) {
-          currentUser.linkToElem.remove();
-        }
-        
-        alert(e.target.response);
-        
-        eventBus.$emit('remove-users');
+        let users = JSON.parse(e.target.response);
+        eventBus.$emit('set-users', users);
+        alert('Удаление пользователей из базы данных успешно выполнено');
       };
       
       this.sendRequest({
-        data: checkedUsers,
+        data: usersToDelete,
         url: "/remove-users",
         callback
       });
@@ -480,49 +529,30 @@ let vm = new Vue({
   data: {
     users: [],
     stateAddNewUser: false,
-    checkedUsers: [],
     stateChangeUsers: false,
-    checkAllCheckbox: false,
     styleObject: {
       paddingLeft: '0px'
     }
   },
   created: function() {
-    eventBus.$on('get-users', (users) => {
+    eventBus.$on('set-users', (users) => {
       this.users = users;
     });
     eventBus.$on('add-user', () => {
       this.stateAddNewUser = !this.stateAddNewUser;
     });
-    eventBus.$on('checkAllCheckbox', (check) => {
-      this.checkAllCheckbox = check;
-    });
     eventBus.$on('save-user', (newUser) => {
       this.users.push(newUser);
-      this.stateAddNewUser = !this.stateAddNewUser;
+      this.stateAddNewUser = false;
     });
-    eventBus.$on('change-users', (changeOriginalState) => {
-      if (changeOriginalState) {
-        this.stateChangeUsers = true;
-      } else {
-        for (let i = 0; i < this.checkedUsers.length; ++i) {
-          let currentUser = this.checkedUsers[i];
-          let currentCellName = currentUser.linkToElem.cells[2];
-          let currentCellAge = currentUser.linkToElem.cells[3];
-          
-          currentUser.linkToElem.cells[0].children[0].checked = false;
-          currentCellName.innerHTML = currentUser.currentName;
-          currentCellAge.innerHTML = currentUser.currentAge;
-        };
-
-        this.checkAllCheckbox = false;
-        this.checkedUsers = [];
-        this.stateChangeUsers = false;
-      }
+    eventBus.$on('change-users', (value) => {
+      this.stateChangeUsers = value;
     });
-    eventBus.$on('remove-users', () => {
-      this.checkAllCheckbox = false;
-      this.checkedUsers = [];
+    eventBus.$on('save-changed-users', (changedUsers) => {
+      eventBus.$emit('check-checkbox-all-users', false);
+      eventBus.$emit('reset-number-of-selected-users');
+      this.stateChangeUsers = false;
+      this.users = changedUsers;
     });
   },
   updated: function() {

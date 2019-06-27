@@ -27,19 +27,19 @@ app.post("/add-user", jsonParser, function (request, response) {
 });
 
 app.post("/change-users", jsonParser, function (request, response) {
-  Users.changeUsers(request.body);
+  let changeUsersString = JSON.stringify(Users.changeUsers(request.body));
   
   fs.writeFileSync("./database/users.js", newDatabaseString(users));
   
-  response.send('Изменения в базу пользователей успешно внесены');
+  response.send(changeUsersString);
 });
 
 app.post("/remove-users", jsonParser, function (request, response) {
-  let changeUsersString = JSON.stringify(Users.removeUsers(request.body));
+  let usersString = JSON.stringify(Users.removeUsers(request.body));
   
   fs.writeFileSync("./database/users.js", newDatabaseString(users));
   
-  response.send('Удаление пользователей из базы данных успешно выполнено');
+  response.send(usersString);
 });
   
 app.listen(3000);

@@ -15,20 +15,18 @@
       :state-add-new-user="stateAddNewUser"
       :state-change-users="stateChangeUsers"
       :send-request="sendRequest"
-    ></get-users>
-    <table-with-users
+      ></get-users>
+      <table-with-users
       :state-add-new-user="stateAddNewUser"
+      :state-change-users="stateChangeUsers"
       :send-request="sendRequest"
       :users="users"
-      :check-all-checkbox="checkAllCheckbox"
-      ref="componentTableWithUsers"
     ></table-with-users>
     <change-users
       :state-add-new-user="stateAddNewUser"
       :state-change-users="stateChangeUsers"
       :send-request="sendRequest"
       :users-length="users.length"
-      :checked-users="checkedUsers"
     ></change-users>
   </div>
   <script src="script.js" defer type="module"></script>
