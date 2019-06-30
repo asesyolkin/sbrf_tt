@@ -6,7 +6,7 @@
     <link href="style.css" rel="stylesheet" type="text/css">
     <link rel="icon" type="image/png" href="favicon.png">
     <script src="https://unpkg.com/vue"></script>
-    <!-- <script src="https://unpkg.com/vuex"></script> -->
+    <script src="https://unpkg.com/vuex"></script>
     <script>Vue.config.productionTip = false;</script>
 </head>
 <body>
@@ -15,23 +15,9 @@
     :style="styleObject" 
     v-cloak
   >
-    <get-users 
-      :state-add-new-user="stateAddNewUser"
-      :state-change-users="stateChangeUsers"
-      :send-request="sendRequest"
-    ></get-users>
-    <table-with-users
-      :state-add-new-user="stateAddNewUser"
-      :state-change-users="stateChangeUsers"
-      :send-request="sendRequest"
-      :users="users"
-    ></table-with-users>
-    <change-users
-      :state-add-new-user="stateAddNewUser"
-      :state-change-users="stateChangeUsers"
-      :send-request="sendRequest"
-      :users-length="users.length"
-    ></change-users>
+    <get-users ></get-users>
+    <table-with-users></table-with-users>
+    <change-users></change-users>
   </div>
   <script src="script.js" defer type="module"></script>
 </body>
